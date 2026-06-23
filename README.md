@@ -36,6 +36,16 @@ npm run start:prod        # produccion
 # npm run start:dev       # desarrollo con watch
 ```
 
+## Despliegue en producción (Windows + SAP)
+
+Para que **SAP** consuma el espejo hay que exponerlo por **HTTP plano** (sin TLS) en la red del
+cliente; ese es el tramo que resuelve la incompatibilidad de TLS. Guía completa y servicio de
+Windows con NSSM en **[`docs/despliegue-windows.md`](docs/despliegue-windows.md)** y los scripts
+en `scripts/windows/`.
+
+> No expongas el espejo a SAP por `https://` (túnel/IIS con TLS): reintroduce la misma capa TLS
+> que SAP no puede negociar. El túnel HTTPS solo sirve para pruebas con Postman/SoapUI.
+
 ## Configuración (`.env`)
 
 | Variable | Descripción |
