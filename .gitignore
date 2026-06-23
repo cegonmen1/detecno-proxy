@@ -1,0 +1,34 @@
+# Dependencias y build
+node_modules/
+dist/
+build/
+
+# Variables de entorno (NUNCA subir valores reales)
+.env
+.env.*
+!.env.example
+
+# Credenciales / insumos reales del cliente o del PAC
+request.xml
+*.pfx
+*.cer
+*.key
+*.p12
+secrets/
+
+# Logs y temporales
+*.log
+logs/
+*.tmp
+
+# Claude / herramientas locales (no van a git)
+.claude/
+CLAUDE.md
+.cursor/
+.aider*
+
+# Sistema operativo / editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

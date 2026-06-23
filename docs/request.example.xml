@@ -1,0 +1,48 @@
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:tem="http://tempuri.org/" xmlns:a="http://www.w3.org/2005/08/addressing">
+   <soap:Header>
+      <a:Action soap:mustUnderstand="1">http://tempuri.org/IDetecno/ComprobanteGenerarSAT40</a:Action>
+      <a:To soap:mustUnderstand="1">http://localhost:3000/qas/Detecno.svc</a:To>
+   </soap:Header>
+   <soap:Body>
+      <tem:ComprobanteGenerarSAT40>
+         <!--Optional:-->
+         <tem:licencia>__COLOCAR_LICENCIA_AQUI__</tem:licencia>
+         <!--Optional:-->
+         <tem:cerBytes></tem:cerBytes>
+         <!--Optional:-->
+         <tem:keyBytes></tem:keyBytes>
+         <!--Optional:-->
+         <tem:passBytes></tem:passBytes>
+         <!--Optional:-->
+         <tem:xml>
+         PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48Y2ZkaTpDb21wcm9iYW50ZSB4
+bWxuczpjZmRpPSJodHRwOi8vd3d3LnNhdC5nb2IubXgvY2ZkLzQiIHhtbG5zOnhzaT0iaHR0cDov
+L3d3dy53My5vcmcvMjAwMS9YTUxTY2hlbWEtaW5zdGFuY2UiIHhzaTpzY2hlbWFMb2NhdGlvbj0i
+aHR0cDovL3d3dy5zYXQuZ29iLm14L2NmZC80IGh0dHA6Ly93d3cuc2F0LmdvYi5teC9zaXRpb19p
+bnRlcm5ldC9jZmQvNC9jZmR2NDAueHNkIiBWZXJzaW9uPSI0LjAiIFNlcmllPSJRIiBGb2xpbz0i
+MDAxNzQ0MDYiIEZlY2hhPSIyMDI2LTA2LTEwVDE3OjI3OjIyIiBGb3JtYVBhZ289IjAzIiBDb25k
+aWNpb25lc0RlUGFnbz0iQ09OVEFETyIgTW9uZWRhPSJNWE4iIFRpcG9EZUNvbXByb2JhbnRlPSJJ
+IiBFeHBvcnRhY2lvbj0iMDEiIE1ldG9kb1BhZ289IlBVRSIgTHVnYXJFeHBlZGljaW9uPSIyNzAw
+MCIgRGVzY3VlbnRvPSIwIiBTdWJUb3RhbD0iODYyLjA3IiBUb3RhbD0iMTAwMC4wMCI+PGNmZGk6
+Q2ZkaVJlbGFjaW9uYWRvcyBUaXBvUmVsYWNpb249IjA0Ij48Y2ZkaTpDZmRpUmVsYWNpb25hZG8g
+VVVJRD0iRTYwNjI1NkMtNEZERS00NkUxLTgzOTgtOTdEQzI2MzE4QjBGIi8+PC9jZmRpOkNmZGlS
+ZWxhY2lvbmFkb3M+PGNmZGk6RW1pc29yIFJmYz0iWElBMTkwMTI4SjYxIiBOb21icmU9IlhFTk9O
+IElORFVTVFJJQUwgQVJUSUNMRVMiIFJlZ2ltZW5GaXNjYWw9IjYxMiIvPjxjZmRpOlJlY2VwdG9y
+IFJmYz0iR09TTTczMTEwNlE5NiIgTm9tYnJlPSJNQVJUSEEgQUxJQ0lBIEdPTlpBTEVaIFNPTElT
+IiBVc29DRkRJPSJTMDEiIFJlZ2ltZW5GaXNjYWxSZWNlcHRvcj0iNjA1IiBEb21pY2lsaW9GaXNj
+YWxSZWNlcHRvcj0iMjcwMDAiLz48Y2ZkaTpDb25jZXB0b3M+PGNmZGk6Q29uY2VwdG8gQ2xhdmVQ
+cm9kU2Vydj0iODQxMTE1MDYiIE5vSWRlbnRpZmljYWNpb249IjAwMyIgQ2FudGlkYWQ9IjEiIENs
+YXZlVW5pZGFkPSJBQ1QiIFVuaWRhZD0iTk8gQVBMSUNBIiBEZXNjcmlwY2lvbj0iQU5USUNJUE8g
+REVMIEJJRU4gTyBTRVJWSUNJTyIgSW1wb3J0ZT0iODYyLjA3IiBWYWxvclVuaXRhcmlvPSI4NjIu
+MDciIE9iamV0b0ltcD0iMDIiPjxjZmRpOkltcHVlc3Rvcz48Y2ZkaTpUcmFzbGFkb3M+PGNmZGk6
+VHJhc2xhZG8gQmFzZT0iODYyLjA3IiBJbXB1ZXN0bz0iMDAyIiBUaXBvRmFjdG9yPSJUYXNhIiBU
+YXNhT0N1b3RhPSIwLjE2MDAwMCIgSW1wb3J0ZT0iMTM3LjkzIi8+PC9jZmRpOlRyYXNsYWRvcz48
+L2NmZGk6SW1wdWVzdG9zPjwvY2ZkaTpDb25jZXB0bz48L2NmZGk6Q29uY2VwdG9zPjxjZmRpOklt
+cHVlc3RvcyBUb3RhbEltcHVlc3Rvc1RyYXNsYWRhZG9zPSIxMzcuOTMiPjxjZmRpOlRyYXNsYWRv
+cz48Y2ZkaTpUcmFzbGFkbyBCYXNlPSI4NjIuMDciIEltcHVlc3RvPSIwMDIiIFRpcG9GYWN0b3I9
+IlRhc2EiIFRhc2FPQ3VvdGE9IjAuMTYwMDAwIiBJbXBvcnRlPSIxMzcuOTMiLz48L2NmZGk6VHJh
+c2xhZG9zPjwvY2ZkaTpJbXB1ZXN0b3M+PC9jZmRpOkNvbXByb2JhbnRlPg==
+         </tem:xml>
+      </tem:ComprobanteGenerarSAT40>
+   </soap:Body>
+</soap:Envelope>
