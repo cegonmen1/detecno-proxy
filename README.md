@@ -80,6 +80,21 @@ QAS_ALLOWED_OPS=ComprobanteGenerarSAT40
   `SOAPAction` (SOAP 1.1), el `wsa:Action` del sobre o el primer elemento de `soap:Body`.
 - Para cambiar la lista: editar el `.env` y reiniciar el servicio.
 
+### Auto-inyección de WS-Addressing (transparencia para SAP)
+
+El PAC (WCF) exige SOAP 1.2 + WS-Addressing (`wsa:Action`, `wsa:To`) y el `action` en el
+`Content-Type`. Para que SAP **no tenga que generar nada de eso**, el espejo puede completarlo:
+
+- Si el mensaje **no** trae `wsa:Action`, el espejo detecta la operación (por el `action` del
+  `Content-Type`, el `SOAPAction`, el `wsa:Action` o el primer elemento de `soap:Body`),
+  inyecta `wsa:Action` y `wsa:To` en el header, y fija el `Content-Type` que el PAC espera.
+- Si el mensaje **ya** trae WS-Addressing, no se toca nada (passthrough).
+- Controlado por `QAS_WSA_AUTOINJECT` / `PRD_WSA_AUTOINJECT` (**default `true`**). Poner `false`
+  para passthrough estricto.
+
+Con esto, SAP puede mandar incluso un sobre con `<soap:Header/>` vacío y un `Content-Type`
+sin `action`, y el timbrado funciona igual.
+
 ## Lo que SAP debe consumir
 
 - **WSDL QAS:** `http://<host-espejo>:<port>/qas/Detecno.svc?singleWsdl`

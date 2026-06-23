@@ -22,8 +22,12 @@ export interface ProxyResult {
 export class ProxyService {
   private readonly log = new Logger('Espejo');
 
+  // keepAlive deshabilitado a proposito: reutilizar un socket que el PAC ya cerro por
+  // inactividad provoca ECONNRESET intermitente (-> 502). El timbrado NO es idempotente,
+  // asi que no se puede reintentar sin riesgo de CFDI duplicado; una conexion fresca por
+  // peticion lo evita de raiz. Cuesta un handshake TLS extra por llamada (aceptable).
   private readonly agent = new https.Agent({
-    keepAlive: true,
+    keepAlive: false,
     minVersion: 'TLSv1.2',
     rejectUnauthorized: process.env.PAC_TLS_REJECT_UNAUTHORIZED !== 'false',
   });
@@ -80,30 +84,97 @@ export class ProxyService {
     };
   }
 
+  /** Prefijo del namespace SOAP del sobre (soap, s, soapenv...). */
+  private envelopePrefix(text: string): string {
+    const m = text.match(/<([\w-]+):Envelope[\s>]/);
+    return m ? m[1] : 'soap';
+  }
+
+  /**
+   * Inyecta wsa:Action y wsa:To en el header SOAP si el mensaje no los trae.
+   * Hace el espejo transparente para un SAP que no genera WS-Addressing: solo
+   * manda el cuerpo de negocio y el espejo completa lo que el PAC (WCF) exige.
+   */
+  private injectWsAddressing(
+    text: string,
+    target: string,
+    op: string,
+  ): { xml: string; actionUri: string; injected: boolean } {
+    const actionUri = `http://tempuri.org/IDetecno/${op}`;
+    const p = this.envelopePrefix(text);
+
+    const headerWith = new RegExp(`<${p}:Header\\b[^>]*>([\\s\\S]*?)</${p}:Header>`);
+    const headerSelf = new RegExp(`<${p}:Header\\b[^>]*/>`);
+    const hm = text.match(headerWith);
+
+    // Si ya hay un elemento Action de WS-Addressing, no tocar nada.
+    if (hm && /<[\w-]+:Action[\s>]/.test(hm[1])) {
+      return { xml: text, actionUri, injected: false };
+    }
+
+    const block =
+      `<wsa:Action xmlns:wsa="http://www.w3.org/2005/08/addressing" ${p}:mustUnderstand="1">${actionUri}</wsa:Action>` +
+      `<wsa:To xmlns:wsa="http://www.w3.org/2005/08/addressing" ${p}:mustUnderstand="1">${target}</wsa:To>`;
+
+    let xml: string;
+    if (hm) {
+      xml = text.replace(new RegExp(`</${p}:Header>`), `${block}</${p}:Header>`);
+    } else if (headerSelf.test(text)) {
+      xml = text.replace(headerSelf, `<${p}:Header>${block}</${p}:Header>`);
+    } else {
+      xml = text.replace(new RegExp(`(<${p}:Envelope\\b[^>]*>)`), `$1<${p}:Header>${block}</${p}:Header>`);
+    }
+    return { xml, actionUri, injected: true };
+  }
+
+  /** Construye el Content-Type que el PAC espera, fijando el parametro action. */
+  private buildContentType(text: string, actionUri: string, original?: string): string {
+    const isSoap12 = text.includes('http://www.w3.org/2003/05/soap-envelope');
+    if (isSoap12) return `application/soap+xml; charset=utf-8; action="${actionUri}"`;
+    // SOAP 1.1: la accion viaja en la cabecera SOAPAction (se fija aparte).
+    return original && original.trim() ? original : 'text/xml; charset=utf-8';
+  }
+
   async forwardPost(
     env: EnvConfig,
     rawBody: Buffer,
     contentType?: string,
     soapAction?: string,
   ): Promise<ProxyResult> {
-    // Reescribir la URL del espejo de vuelta a la del PAC (wsa:To, anyURI internos).
-    let payload = rawBody;
-    if (env.publicUrl && rawBody?.length) {
-      const asText = rawBody.toString('utf8');
-      if (asText.includes(env.publicUrl)) {
-        payload = Buffer.from(this.replaceAll(asText, env.publicUrl, env.target), 'utf8');
+    let text = rawBody?.length ? rawBody.toString('utf8') : '';
+    let outContentType = contentType;
+    let outSoapAction = soapAction;
+
+    // Auto-inyeccion de WS-Addressing para clientes que no la generan (transparencia para SAP).
+    if (env.wsaAutoInject && text) {
+      const op = this.extractOperation(contentType, soapAction, rawBody);
+      if (op) {
+        const r = this.injectWsAddressing(text, env.target, op);
+        if (r.injected) {
+          text = r.xml;
+          outContentType = this.buildContentType(text, r.actionUri, contentType);
+          outSoapAction = soapAction ?? r.actionUri;
+          this.log.log(`[${env.key}] WS-Addressing inyectado automaticamente para ${op}`);
+        }
       }
     }
 
+    // Reescribir la URL del espejo de vuelta a la del PAC (wsa:To, anyURI internos).
+    if (env.publicUrl && text.includes(env.publicUrl)) {
+      text = this.replaceAll(text, env.publicUrl, env.target);
+    }
+
+    const payload = text ? Buffer.from(text, 'utf8') : rawBody;
+
     this.log.log(
-      `[${env.key}] POST -> ${env.target}  (SOAPAction=${soapAction ?? 'n/a'}, ${payload.length} bytes)`,
+      `[${env.key}] POST -> ${env.target}  (SOAPAction=${outSoapAction ?? 'n/a'}, ${payload.length} bytes)`,
     );
 
     const resp = await axios.post(env.target, payload, {
       httpsAgent: this.agent,
       headers: {
-        'Content-Type': contentType ?? 'application/soap+xml; charset=utf-8',
-        ...(soapAction ? { SOAPAction: soapAction } : {}),
+        'Content-Type': outContentType ?? 'application/soap+xml; charset=utf-8',
+        ...(outSoapAction ? { SOAPAction: outSoapAction } : {}),
       },
       responseType: 'arraybuffer',
       transformResponse: (r) => r,

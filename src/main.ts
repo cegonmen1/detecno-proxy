@@ -6,6 +6,16 @@ import { AppModule } from './app.module';
 async function bootstrap(): Promise<void> {
   // bodyParser desactivado: necesitamos el cuerpo SOAP crudo (Buffer) para reenviarlo intacto.
   const app = await NestFactory.create(AppModule, { bodyParser: false });
+
+  // CORS permisivo: clientes server-side (SAP, SoapUI, Postman) no lo necesitan,
+  // pero lo habilitamos para que ningun cliente de navegador quede bloqueado en pruebas.
+  app.enableCors({
+    origin: true,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: '*',
+    exposedHeaders: '*',
+  });
+
   app.use(raw({ type: () => true, limit: '50mb' }));
 
   const port = Number(process.env.PORT) || 3000;

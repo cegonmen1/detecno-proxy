@@ -8,6 +8,7 @@ export interface EnvConfig {
   publicUrl: string; // URL publica del espejo para este ambiente
   enabled: boolean;
   allowedOps: string[]; // operaciones habilitadas; lista vacia = todas
+  wsaAutoInject: boolean; // inyecta WS-Addressing si SAP no lo manda
 }
 
 /** Convierte "Op1, Op2 ,Op3" en ['Op1','Op2','Op3']. Vacio o sin valor = []. */
@@ -27,6 +28,7 @@ export function loadEnvironments(): Record<string, EnvConfig> {
       // QAS encendido por defecto.
       enabled: (process.env.QAS_ENABLED ?? 'true') !== 'false',
       allowedOps: parseOps(process.env.QAS_ALLOWED_OPS),
+      wsaAutoInject: (process.env.QAS_WSA_AUTOINJECT ?? 'true') !== 'false',
     },
     prd: {
       key: 'prd',
@@ -35,6 +37,7 @@ export function loadEnvironments(): Record<string, EnvConfig> {
       // PRD apagado por defecto: hay que encenderlo explicitamente con PRD_ENABLED=true.
       enabled: (process.env.PRD_ENABLED ?? 'false') === 'true',
       allowedOps: parseOps(process.env.PRD_ALLOWED_OPS),
+      wsaAutoInject: (process.env.PRD_WSA_AUTOINJECT ?? 'true') !== 'false',
     },
   };
 }
