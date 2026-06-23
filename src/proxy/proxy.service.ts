@@ -72,7 +72,8 @@ export class ProxyService {
     const resp = await axios.get<string>(url, {
       httpsAgent: this.agent,
       responseType: 'text',
-      transformResponse: (r) => r,
+      // Sin transformacion: conservamos el cuerpo tal cual lo manda el PAC.
+      transformResponse: (data: unknown) => data,
       validateStatus: () => true,
     });
     // El WSDL/XSD apunta al PAC: reescribir a la URL publica del espejo de este ambiente.
@@ -122,7 +123,10 @@ export class ProxyService {
     } else if (headerSelf.test(text)) {
       xml = text.replace(headerSelf, `<${p}:Header>${block}</${p}:Header>`);
     } else {
-      xml = text.replace(new RegExp(`(<${p}:Envelope\\b[^>]*>)`), `$1<${p}:Header>${block}</${p}:Header>`);
+      xml = text.replace(
+        new RegExp(`(<${p}:Envelope\\b[^>]*>)`),
+        `$1<${p}:Header>${block}</${p}:Header>`,
+      );
     }
     return { xml, actionUri, injected: true };
   }
@@ -177,7 +181,8 @@ export class ProxyService {
         ...(outSoapAction ? { SOAPAction: outSoapAction } : {}),
       },
       responseType: 'arraybuffer',
-      transformResponse: (r) => r,
+      // Sin transformacion: el cuerpo del PAC se reenvia byte a byte.
+      transformResponse: (data: unknown) => data,
       validateStatus: () => true,
       maxBodyLength: Infinity,
       maxContentLength: Infinity,

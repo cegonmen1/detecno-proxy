@@ -23,7 +23,8 @@ export class ProxyController {
       );
   }
 
-  @All('*')
+  // Express 5 (NestJS 11) exige wildcards con nombre: '*splat' captura cualquier ruta.
+  @All('*splat')
   async handle(@Req() req: Request, @Res() res: Response): Promise<void> {
     const segments = req.path.split('/').filter(Boolean); // ej. ['qas','Detecno.svc']
     const envKey = segments[0]?.toLowerCase();
@@ -46,7 +47,11 @@ export class ProxyController {
 
     const env = envKey ? this.envs[envKey] : undefined;
     if (!env) {
-      this.soapFault(res, 404, `Espejo: ambiente desconocido. Use /qas/Detecno.svc o /prd/Detecno.svc`);
+      this.soapFault(
+        res,
+        404,
+        `Espejo: ambiente desconocido. Use /qas/Detecno.svc o /prd/Detecno.svc`,
+      );
       return;
     }
     if (!env.enabled) {
