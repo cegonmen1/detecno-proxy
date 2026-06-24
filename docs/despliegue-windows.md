@@ -117,9 +117,47 @@ npm run build
 nssm start EspejoDetecno
 ```
 
+## Liberar operaciones gradualmente
+
+SAP importa el WSDL una sola vez y **ve las 18 operaciones** del PAC (el WSDL las declara todas).
+El control de qué está vivo lo lleva el **espejo**: solo deja pasar al PAC las operaciones listadas
+en `QAS_ALLOWED_OPS` (o `PRD_ALLOWED_OPS`). Las demás reciben un **SOAP Fault 403**
+*"operacion no habilitada"* sin tocar al PAC. Por eso liberar más métodos **no requiere reimportar
+el WSDL ni tocar SAP**: solo se edita el `.env` y se reinicia el servicio.
+
+El catálogo completo de las 18 operaciones está como referencia en `.env.example`.
+
+### Pasos para liberar una operación
+
+1. Abre el `.env` real del servidor:
+   ```powershell
+   notepad F:\ws-espejo-detecno\services\detecno-proxy\.env
+   ```
+2. En la línea `QAS_ALLOWED_OPS=`, **agrega** el nombre exacto de la operación (del catálogo en
+   `.env.example`), separado por coma y **sin espacios**. Ejemplo, al liberar la cancelación:
+   ```env
+   QAS_ALLOWED_OPS=ComprobanteGenerarSAT40,ComprobanteCancelar40
+   ```
+3. Guarda (UTF-8, nombre exacto `.env`).
+4. Reinicia el servicio para que relea el `.env`:
+   ```powershell
+   nssm restart EspejoDetecno
+   ```
+5. Verifica que arrancó y qué quedó habilitado:
+   ```powershell
+   curl.exe http://localhost:8000/health
+   ```
+   En el JSON, `qas.allowedOps` debe listar ahora las dos operaciones.
+
+> - El nombre debe coincidir **exactamente** (mayúsculas/minúsculas) con el del catálogo; si no, el
+>   espejo no lo reconoce y lo seguirá bloqueando.
+> - Dejar `QAS_ALLOWED_OPS` **vacío** habilita **todas** las operaciones de golpe.
+> - Cuando un ABAP invoque una operación aún no liberada, su proxy recibirá una excepción con el
+>   texto *"...aun no esta habilitada en qas. Habilitadas: ..."*. Es comportamiento esperado, no un bug;
+>   avísale al consultor SAP. Queda registrado en `out.log` como `operacion bloqueada (no habilitada)`.
+
 ## Notas
 
-- **Liberar más operaciones:** edita `QAS_ALLOWED_OPS` (coma) y `nssm restart`. Vacío = todas.
 - **Encender PRD:** `PRD_ENABLED=true` + licencia productiva válida. Genera CFDI reales.
 - **¿IIS?** No es necesario para HTTP plano. Solo si más adelante quieres un reverse proxy en :80/:443
   hacia el Node; para la prueba con SAP por HTTP, el servicio NSSM directo basta.
