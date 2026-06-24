@@ -38,6 +38,18 @@ export class ProxyService {
     return text.split(from).join(to);
   }
 
+  /**
+   * Quita la WS-SecurityPolicy de transporte (`sp:TransportBinding` -> `HttpsToken`)
+   * del WSDL antes de servirlo a SAP. El binding del PAC exige HTTPS, pero el espejo
+   * se publica en HTTP plano; SAP, al no poder satisfacer esa politica, descarta el
+   * binding completo y reporta "No Service found in WSDL. Subjects with unsupported
+   * policies removed". Removiendo solo ese assertion, SAP conserva el binding (y el
+   * `<wsaw:UsingAddressing/>`, que el PAC si necesita) y genera el proxy sobre HTTP.
+   */
+  private stripTransportPolicy(wsdl: string): string {
+    return wsdl.replace(/<(\w+):TransportBinding\b[\s\S]*?<\/\1:TransportBinding>/g, '');
+  }
+
   /** Ultimo segmento de un URI de accion: .../IDetecno/ComprobanteGenerarSAT40 -> ComprobanteGenerarSAT40 */
   private lastSegment(uri: string): string {
     const u = uri.replace(/"/g, '').trim();
@@ -77,7 +89,16 @@ export class ProxyService {
       validateStatus: () => true,
     });
     // El WSDL/XSD apunta al PAC: reescribir a la URL publica del espejo de este ambiente.
-    const rewritten = this.replaceAll(resp.data ?? '', env.target, env.publicUrl);
+    let rewritten = this.replaceAll(resp.data ?? '', env.target, env.publicUrl);
+    if (env.wsdlStripPolicy) {
+      const clean = this.stripTransportPolicy(rewritten);
+      if (clean !== rewritten) {
+        rewritten = clean;
+        this.log.log(
+          `[${env.key}] WS-SecurityPolicy HTTPS removida del WSDL (consumo HTTP plano para SAP)`,
+        );
+      }
+    }
     return {
       status: resp.status,
       contentType: resp.headers['content-type'] as string | undefined,

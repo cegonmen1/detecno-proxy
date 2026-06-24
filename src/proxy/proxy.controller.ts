@@ -40,6 +40,7 @@ export class ProxyController {
           publicUrl: e.publicUrl,
           allowedOps: e.allowedOps.length ? e.allowedOps : 'todas',
           wsaAutoInject: e.wsaAutoInject,
+          wsdlStripPolicy: e.wsdlStripPolicy,
         })),
       });
       return;

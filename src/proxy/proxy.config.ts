@@ -9,6 +9,7 @@ export interface EnvConfig {
   enabled: boolean;
   allowedOps: string[]; // operaciones habilitadas; lista vacia = todas
   wsaAutoInject: boolean; // inyecta WS-Addressing si SAP no lo manda
+  wsdlStripPolicy: boolean; // quita la WS-SecurityPolicy HTTPS del WSDL servido a SAP
 }
 
 /** Convierte "Op1, Op2 ,Op3" en ['Op1','Op2','Op3']. Vacio o sin valor = []. */
@@ -29,6 +30,7 @@ export function loadEnvironments(): Record<string, EnvConfig> {
       enabled: (process.env.QAS_ENABLED ?? 'true') !== 'false',
       allowedOps: parseOps(process.env.QAS_ALLOWED_OPS),
       wsaAutoInject: (process.env.QAS_WSA_AUTOINJECT ?? 'true') !== 'false',
+      wsdlStripPolicy: (process.env.QAS_WSDL_STRIP_POLICY ?? 'true') !== 'false',
     },
     prd: {
       key: 'prd',
@@ -38,6 +40,7 @@ export function loadEnvironments(): Record<string, EnvConfig> {
       enabled: (process.env.PRD_ENABLED ?? 'false') === 'true',
       allowedOps: parseOps(process.env.PRD_ALLOWED_OPS),
       wsaAutoInject: (process.env.PRD_WSA_AUTOINJECT ?? 'true') !== 'false',
+      wsdlStripPolicy: (process.env.PRD_WSDL_STRIP_POLICY ?? 'true') !== 'false',
     },
   };
 }
