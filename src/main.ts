@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
 import { raw } from 'express';
 import { AppModule } from './app.module';
+import { loadEnvironments } from './proxy/proxy.config';
 
 async function bootstrap(): Promise<void> {
   // bodyParser desactivado: necesitamos el cuerpo SOAP crudo (Buffer) para reenviarlo intacto.
@@ -23,8 +24,12 @@ async function bootstrap(): Promise<void> {
 
   const log = new Logger('Espejo');
   log.log(`Espejo Detecno escuchando en http://0.0.0.0:${port}`);
-  log.log(`Reenviando a PAC: ${process.env.PAC_BASE_URL}`);
-  log.log(`URL publica (WSDL): ${process.env.MIRROR_PUBLIC_URL}`);
+  for (const env of Object.values(loadEnvironments())) {
+    const estado = env.enabled ? 'ON ' : 'OFF';
+    log.log(
+      `  [${env.key}] ${estado} -> PAC ${env.target || '(sin target)'} | publico ${env.publicUrl || '(sin publicUrl)'}`,
+    );
+  }
 }
 
 void bootstrap();
